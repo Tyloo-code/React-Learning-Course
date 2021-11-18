@@ -31,9 +31,9 @@
 			render(){
 				return(
 					<div>
-						<input ref={c => this.input1 = c } type="text" placeholder="点击按钮提示数据"/>&nbsp;
+						<input ref={currentNode => this.input1 = currentNode } type="text" placeholder="点击按钮提示数据"/>&nbsp;
 						<button onClick={this.showData}>点我提示左侧的数据</button>&nbsp;
-						<input onBlur={this.showData2} ref={c => this.input2 = c } type="text" placeholder="失去焦点提示数据"/>&nbsp;
+						<input onBlur={this.showData2} ref={currentNode => this.input2 = currentNode} type="text" placeholder="失去焦点提示数据"/>&nbsp;
 					</div>
 				)
 			}

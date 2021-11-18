@@ -42,11 +42,11 @@
 			}
 
 			//保存表单数据到状态中
-			saveFormData = (dataType)=>{
-				return (event)=>{
-					this.setState({[dataType]:event.target.value})
-				}
-			}
+      saveFormData = (dataType) => {
+        return event => {
+          this.setState({[dataType]:event.target.value})
+        }
+      };
 
 			//表单提交的回调
 			handleSubmit = (event)=>{
