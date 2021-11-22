@@ -4,21 +4,20 @@ import './index.css'
 export default class Footer extends Component {
 
 	//全选checkbox的回调
-	handleCheckAll = (event)=>{
-		this.props.checkAllTodo(event.target.checked)
-	}
-
+  handleCheckAll = (event) => {
+    this.props.checkAllTodo(event.target.checked)
+  }
 	//清除已完成任务的回调
-	handleClearAllDone = ()=>{
-		this.props.clearAllDone()
-	}
+	handleClearAllDone = () => {
+    this.props.clearAllDone()
+  }
 
 	render() {
 		const {todos} = this.props
 		//已完成的个数
-		const doneCount = todos.reduce((pre,todo)=> pre + (todo.done ? 1 : 0),0)
+    const doneCount = todos.reduce((pre,todo) => pre + (todo.done ? 1 : 0),0)
 		//总数
-		const total = todos.length
+    const total = todos.length
 		return (
 			<div className="todo-footer">
 				<label>
