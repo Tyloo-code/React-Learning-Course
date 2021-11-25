@@ -27,8 +27,8 @@ export default class App extends Component {
             <div className="panel">
               <div className="panel-body">
                 <Switch>
-                  <Route path='/about' component={About}/>
-                  <Route path='/home' component={Home}/>
+                  <Route exact={true} path='/about' component={About}/>
+                  <Route exact path='/home' component={Home}/>
                 </Switch>
               </div>
             </div>
