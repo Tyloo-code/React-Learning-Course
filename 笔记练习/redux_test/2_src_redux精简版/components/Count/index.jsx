@@ -1,31 +1,31 @@
 import React, { Component } from 'react'
-import store from '../../redux/store'
-import {createIncrementAction,createDecrementAction} from '../../redux/count_action'
+import store from '../../../../../源码/redux_test/2_src_redux精简版/redux/store'
+
 export default class Count extends Component {
   state={carName:'奔驰G63'}
 
   increment = () => {
     const {value} = this.selectNumber
-    store.dispatch(createIncrementAction(value*1))
+    store.dispatch({type:'increment',data:value*1})
   }
 
   decrement = () => {
     const {value} = this.selectNumber
-    store.dispatch(createDecrementAction(value*1))
+    store.dispatch({type:'decrement',data:value*1})
   }
 
   incrementIfOdd = () => {
     const {value} = this.selectNumber
     const {count} = store.getState()
     if(count % 2 !== 0){
-    	store.dispatch(createIncrementAction(value*1))
+    	store.dispatch({type:'increment',data:value*1})
     }
   }
 
   incrementAsync = () => {
     const {value} = this.selectNumber
     setTimeout(() => {
-      store.dispatch(createIncrementAction(value*1))
+      store.dispatch({type:'increment',data:value*1})
     }, 500)
   }
 
