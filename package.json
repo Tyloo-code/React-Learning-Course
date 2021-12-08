@@ -1,6 +1,12 @@
 {
   "dependencies": {
+    "@craco/craco": "^6.4.2",
+    "babel-plugin-import": "^1.13.3",
+    "craco-less": "^1.20.0",
+    "customize-cra": "^1.0.0",
     "nanoid": "^3.1.30",
-    "prop-types": "^15.7.2"
+    "prop-types": "^15.7.2",
+    "react-app-rewired": "^2.1.8",
+    "redux": "^4.1.2"
   }
 }

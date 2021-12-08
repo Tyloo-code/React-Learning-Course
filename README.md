@@ -1925,3 +1925,1184 @@ export default withRouter(index);
 1. 在BrowserRouter 中，state 保存在history 对象中，刷新不会丢失
 2. HashRouter 则刷新会丢失 state
 
+
+# 四、antd 组件库的基本使用
+
+## 一、Antd 组件基本使用
+
+使用 `Antd` 组件非常的简单
+
+引包 ----- 暴露 ---- 使用
+
+首先我们通过组件库来实现一个简单的按钮
+
+**第一步**
+
+安装并引入 `antd` 包
+
+使用命令下载这个组件库
+
+```js
+yarn add antd
+```
+
+在我们需要使用的文件下引入，我这里是在 `App.jsx` 内引入
+
+```js
+import { Button } from 'antd'
+```
+
+在引入的同时，暴露出要使用的组件名 `Button`
+
+推荐去[官方文档](https://ant.design/components/button-cn/)查看，都会有代码解释
+
+现在我们可以在 App 中使用 `Button` 组件
+
+```jsx
+<div>
+    App..
+    <Button type="primary">Primary Button</Button>
+    <Button>Default Button</Button>
+    <Button type="dashed">Dashed Button</Button>
+    <br />
+    <Button type="text">Text Button</Button>
+    <Button type="link">Link Button</Button>
+</div>
+```
+
+我这里使用了几种按钮
+
+但是就这样你会发现按钮少了样式
+
+我们还需要引入 `antd` 的 CSS 文件
+
+```less
+@import '/node_modules/antd/dist/antd.less';
+```
+
+可以在 `node_modules` 文件中的 `antd` 目录下的 `dist` 文件夹中找到相应的样式文件，引入即可
+
+即可成功引入 `antd` 组件
+
+## 二、自定义主题颜色
+
+由于这些组件采用的颜色，都是支付宝蓝，有时候我们不想要这样的颜色，想要用其他的配色，这当然是可以实现的，我们需要引用一些库和更改一些配置文件来实现
+
+在视频中，老师讲解的是 `3.x` 版本中的实现方法，这种方法需要去暴露 React 中的配置文件，这种操作是不可返回的，一旦暴露就不可回收。我觉得这不是一个好方法~
+
+在 `antd` 最新版中，引入了 `craco` 库，我们可以使用 `craco` 来实现自定义的效果
+
+首先我们需要安装 `craco`
+
+```js
+yarn add @craco/craco
+```
+
+同时我们需要更改 `package.json` 中的启动文件
+
+```js
+"scripts": {
+  "start": "craco start",
+  "build": "craco build",
+  "test": "craco test",
+  "eject": "react-scripts eject"
+},
+```
+
+更改成 `craco` 执行
+
+接下来我们需要在根目录下新建一个 `craco.config.js` 文件，用于配置自定义内容
+
+```js
+const CracoLessPlugin = require('craco-less');
+
+module.exports = {
+  plugins: [
+    {
+      plugin: CracoLessPlugin,
+      options: {
+        lessLoaderOptions: {
+          lessOptions: {
+            modifyVars: { '@primary-color': 'skyblue' },
+            javascriptEnabled: true,
+          },
+        },
+      },
+    },
+  ],
+};
+```
+
+其实它就是用来操作 `less` 文件的全局颜色
+
+简单的说，`antd` 组件是采用 `less` 编写的，我们需要通过重新配置的方式去更改它的值
+
+同时我们需要将我们先前的 `App.css` 文件更改为 `App.less` 文件，在当中引入我们的 `less` 文件
+
+```less
+@import '/node_modules/antd/dist/antd.less';
+```
+
+注意一定要**添加分号结尾**，这是一个非常容易犯的错误
+
+![1](/assets/29.png)
+
+可见，我们成功的将主题色修改成了红色
+
+>antd ui组件库就记这么多，还有样式的按需引入没有记录，不太喜好暴露 React 配置文件...
+
+# 五、redux 基本使用
+
+## 一、什么情况使用 Redux ？
+
+首先，我们先明晰 `Redux` 的作用 ，实现集中式状态管理。
+
+`Redux` 适用于多交互、多数据源的场景。简单理解就是**复杂**
+
+从组件角度去考虑的话，当我们有以下的应用场景时，我们可以尝试采用 `Redux` 来实现
+
+1. 某个组件的状态需要共享时
+2. 一个组件需要改变其他组件的状态时
+3. 一个组件需要改变全局的状态时
+
+除此之外，还有很多情况都需要使用 Redux 来实现（还没有学 hook，或许还有更好的方法）
+
+![1](/assets/30.png)
+
+这张图，非常形象的将纯 React 和 采用 Redux 的区别体现了出来
+
+## 二、Redux 的工作流程
+
+![1](/assets/31.png)
+
+首先组件会在 Redux 中派发一个 `action` 方法，通过调用 `store.dispatch` 方法，将 `action` 对象派发给 `store` ，当 `store` 接收到 `action` 对象时，会将先前的 `state` 与传来的 `action` 一同发送给 `reducer` `，reducer` 在接收到数据后，进行数据的更改，返回一个新的状态给 `store` ，最后由 `store` 更改 `state`
+
+![1](/assets/6.gif)
+
+## 三、Redux 三个核心概念
+
+### 1. store
+
+`store` 是 Redux 的核心，可以理解为是 Redux 的数据中台，我们可以将任何我们想要存放的数据放在 `store` 中，在我们需要使用这些数据时，我们可以从中取出相应的数据。因此我们需要先创建一个 `store` ，在 Redux 中可以使用 `createStore` API 来创建一个 `store`
+
+在生产中，我们需要在 `src` 目录下的 `redux` 文件夹中新增一个 `store.js` 文件，在这个文件中，创建一个 `store` 对象，并暴露它
+
+因此我们需要从 `redux` 中暴露两个方法
+
+```js
+import {
+    createStore,
+    applyMiddleware
+} from 'redux'
+```
+
+并引入为 count 组件服务的 reducer
+
+```js
+import countReducer from './count_reducer'
+```
+
+最后调用 `createStore` 方法来暴露 `store`
+
+```js
+export default createStore(countReducer, applyMiddleware(thunk))
+```
+
+在 `store` 对象下有一些常用的内置方法
+
+获取当前时刻的 `store` ，我们可以采用 `getStore` 方法
+
+```js
+const state = store.getState();
+```
+
+在前面我们的流程图中，我们需要通过 `store` 中的 `dispatch` 方法来派生一个 `action` 对象给 `store`
+
+```js
+store.dispatch(`action对象`)
+```
+
+最后还有一个 `subscribe` 方法，这个方法可以帮助我们订阅 `store` 的改变，只要 `store` 发生改变，这个方法的回调就会执行
+
+为了监听数据的更新，我们可以将 `subscribe` 方法绑定在组件挂载完毕生命周期函数上，但是这样，当我们的组件数量很多时，会比较的麻烦，因此我们可以直接将 `subscribe` 函数用来监听整个 `App` 组件的变化
+
+```js
+store.subscribe(() => {
+    ReactDOM.render( < App /> , document.getElementById('root'))
+})
+```
+
+### 2. action
+
+`action` 是 `store` 中唯一的数据来源，一般来说，我们会通过调用 `store.dispatch` 将 action 传到 store
+
+我们需要传递的 `action` 是一个对象，它必须要有一个 `type` 值
+
+例如，这里我们暴露了一个用于返回一个 `action` 对象的方法
+
+```js
+export const createIncrementAction = data => ({
+    type: INCREMENT,
+    data
+})
+```
+
+我们调用它时，会返回一个 `action` 对象
+
+### 3. reducer
+
+在 Reducer 中，我们需要指定状态的操作类型，要做怎样的数据更新，因此这个类型是必要的。
+
+reducer 会根据 action 的指示，对 state 进行对应的操作，然后返回操作后的 state
+
+如下，我们对接收的 action 中传来的 type 进行判断
+
+```js
+export default function countReducer(preState = initState, action) {
+    const {
+        type,
+        data
+    } = action;
+    switch (type) {
+        case INCREMENT:
+            return preState + data
+        case DECREMENT:
+            return preState - data
+        default:
+            return preState
+    }
+}
+```
+
+更改数据，返回新的状态
+
+## 四、创建 constant 文件
+
+在我们正常的编码中，有可能会出现拼写错误的情况，但是我们会发现，拼写错误了不一定会报错，因此就会比较难搞。
+
+我们可以在 `redux` 目录下，创建一个 `constant` 文件，这个文件用于定义我们代码中常用的一些变量，例如
+
+```js
+export const INCREMENT = 'increment'
+export const DECREMENT = 'decrement'
+```
+
+将这两个单词写在 `constant` 文件中，并对外暴露，当我们需要使用时，我们可以引入这个文件，并直接使用它的名称即可
+
+直接使用 `INCREMENT` 即可
+
+## 五、实现异步 action
+
+一开始，我们直接调用一个异步函数，这虽然没有什么问题，但是难道 redux 就不可以实现了吗？
+
+```js
+incrementAsync = () => {
+    const { value } = this.selectNumber
+    const { count } = this.state;
+    setTimeout(() => {
+        this.setState({ count: count + value * 1 })
+    }, 500);
+}
+```
+
+我们可以先尝试将它封装到 `action` 对象中调用
+
+```js
+export const createIncrementAsyncAction = (data, time) => {
+    // 无需引入 store ，在调用的时候是由 store 调用的
+    return (dispatch) => {
+        setTimeout(() => {
+            dispatch(createIncrementAction(data))
+        }, time)
+    }
+}
+```
+
+当我们点击异步加操作时，我们会调用这个函数，在这个函数里接收一个延时加的时间，还有action所需的数据，和原先的区别只在于返回的时一个定时器函数
+
+但是如果仅仅这样，很显然是会报错的，它默认需要接收一个对象
+
+如果我们需要实现传入函数，那我们就需要告诉：你只需要默默的帮我执行以下这个函数就好！
+
+这时我们就需要引入中间件，在原生的 `redux` 中暴露出 `applyMiddleware` 中间件执行函数，并引入 `redux-thunk` 中间件（需要手动下载）
+
+```js
+import thunk from 'redux-thunk'
+```
+
+通过第二个参数传递下去就可以了
+
+```js
+export default createStore(countReducer, applyMiddleware(thunk))
+```
+
+注意：异步 action 不是必须要写的，完全可以自己等待异步任务的结果后再去分发同步action
+
+>采用 `react-thunk` 能让异步代码像同步代码一样执行，在 `redux` 中我们也是可以实现异步的，但是这样我们的代码中会有很多异步的细节，这不是我们想看到的，利用 `react-thunk` 之类的库，就能让我们只关心我们的业务
+
+## 六、Redux 三大原则
+
+理解好 Redux 有助于我们更好的理解接下来的 React -Redux
+
+### 1. 第一个原则
+
+**单向数据流**：整个 Redux 中，数据流向是单向的
+
+UI 组件 ---> action ---> store ---> reducer ---> store
+
+### 2. 第二个原则
+
+**state 只读**：在 Redux 中不能通过直接改变 state ，来控制状态的改变，如果想要改变 state ，则需要触发一次 action。通过 action 执行 reducer
+
+### 3. 第三个原则
+
+**纯函数执行**：每一个reducer 都是一个纯函数，不会有任何副作用，返回是一个新的 state，state 改变会触发 store 中的 subscribe
+
+# 六、React-Redux 基本使用
+
+## 一、容器组件和 UI 组件
+
+1. 所有的 UI 组件都需要有一个容器组件包裹
+2. 容器组件来负责和 Redux 打交道，可以随意使用 Redux 的API
+3. UI 组件无任何 Redux API
+4. 容器组件用于处理逻辑，UI 组件只会负责渲染和交互，不处理逻辑
+
+![1](/assets/32.png)
+
+在我们的生产当中，我们可以直接将 UI 组件写在容器组件的代码文件当中，这样就无需多个文件
+
+首先，我们在 src 目录下，创建一个 `containers` 文件夹，用于存放各种容器组件，在该文件夹内创建 `Count` 文件夹，即表示即将创建 Count 容器组件，再创建 `index.jsx` 编写代码
+
+要实现容器组件和 UI 组件的连接，我们需要通过 `connect` 来实现
+
+```js
+// 引入UI组件
+import CountUI from '../../components/Count'
+// 引入 connect 连接UI组件
+import {connect} from 'react-redux'
+// 建立连接
+export default connect()(CountUI)
+```
+
+## 二、Provider
+
+由于我们的状态可能会被很多组件使用，所以 React-Redux 给我们提供了一个 Provider 组件，可以全局注入 redux 中的 store ，只需要把 Provider 注册在根部组件即可
+
+例如，当以下组件都需要使用 store 时，我们需要这么做，但是这样徒增了工作量，很不便利
+
+```js
+<Count store={store}/>
+{/* 示例 */}
+<Demo1 store={store}/>
+<Demo1 store={store}/>
+<Demo1 store={store}/>
+<Demo1 store={store}/>
+<Demo1 store={store}/>
+```
+
+我们可以这么做：在 src 目录下的 `index.js` 文件中，引入 `Provider` ，直接用 `Provider` 标签包裹 `App` 组件，将 `store` 写在 `Provider` 中即可
+
+```js
+ReactDOM.render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById("root")
+);
+```
+
+这样我们在 `App.jsx` 文件中，组件无需手写指定 `store` ，即可使用 `store`
+
+## 三、connect
+
+在前面我们看到的 react-redux 原理图时，我们会发现容器组件需要给 UI 组件传递状态和方法，并且是通过 `props` 来传递，看起来很简单。但是，我们会发现容器组件中似乎没有我们平常传递 `props` 的情形
+
+这时候就需要继续研究一下容器组件中的唯一一个函数 `connect`
+
+connect 方法是一个连接器，用于连接容器组件和 UI 组件，它第一次执行时，接收4个参数，这些参数都是**可选**的，它执行的执行的结果还是一个函数，第二次执行接收一个 UI 组件
+
+第一次执行时的四个参数：`mapStateToProps` 、`mapDispatchToProps` 、`mergeProps`、`options`
+
+### mapStateToProps
+
+```js
+const mapStateToProps = state => ({ count: state })
+```
+
+它接收 `state` 作为参数，并且返回一个对象，这个对象标识着 UI 组件的同名参数，
+
+返回的对象中的 key 就作为传递给 UI 组件 props 的 key，value 就作为 props 的 value
+
+如上面的代码，我们可以在 UI 组件中直接通过 props 来读取 `count` 值
+
+```js
+<h1>当前求和为：{this.props.count}</h1>
+```
+
+这样我们就打通了 UI 组件和容器组件间的状态传递，那如何传递方法呢？
+
+### mapDispatchToProps
+
+connect 接受的第二个参数是 `mapDispatchToProps` 它是用于建立 UI 组件的参数到 `store.dispacth` 方法的映射
+
+我们可以把参数写成对象形式，在这里面定义 action 执行的方法，例如 jia 执行什么函数，`jian` 执行什么函数？
+
+我们都可以在这个参数中定义，如下定义了几个方法对应的操作函数
+
+```js
+{
+    jia: createIncrementAction,
+    jian: createDecrementAction,
+    jiaAsync: createIncrementAsyncAction
+}
+```
+
+写到这里其实 `connect` 已经比较完善了，但是你可以仔细想想 `redux` 的工作流程
+
+![1](/assets/31.png)
+
+似乎少了点什么，我们在这里调用了函数，创建了 `action` 对象，但是好像 `store` 并没有执行 `dispatch` ，那是不是断了呢？执行不了呢？
+
+其实这里 `react-redux` 已经帮我们做了优化，当调用 `actionCreator` 的时候，会立即发送 `action` 给 `store` 而不用手动的 `dispatch`
+
+* 自动调用 dispatch
+
+## 四、完整开发
+
+首先我们在 `containers` 文件夹中，直接编写我们的容器组件，无需编写 UI 组件
+
+先打 `rcc` 打出指定代码段，然后暴露出 `connect` 方法
+
+```js
+import { connect } from 'react-redux'
+```
+
+从 `action` 文件中暴露创建 `action` 的方法
+
+```js
+import {createIncrementAction} from '../../redux/count_action'
+```
+
+编写 UI 组件，简单写个 demo，绑定 props 和方法
+
+```js
+return (
+    <div>
+        <h2>当前求和为：{this.props.count}</h2>
+        <button onClick={this.add}>点我加1</button>
+    </div>
+);
+```
+
+调用 `connect` 包装暴露 UI 组件
+
+```js
+export default connect(
+    state => ({ count: state }),// 状态
+    { jia: createIncrementAction } // 方法
+)(Count);
+```
+
+第一次执行的参数就直接传递 `state` 和一个指定 `action` 的对象
+
+# 七、数据共享
+
+## 一、编写 Person 组件
+
+>上面的 Count 组件，已经在前面几篇写过了，但是我没有记录详细的实现过程，只是做了一些小小的总结（我摸鱼了）
+
+不管如何，我们先来实现一个 Person 组件吧
+
+首先我们需要在 `containers` 文件夹下编写 Person 组件的**容器组件**
+
+如何编写一个容器组件呢？（上一篇也讲过了）
+
+首先我们需要编写 `index.jsx` 文件，在这个文件里面编写 Person 组件的 UI **组件**，并使用 `connect` 函数将它包装，**映射它的状态和方法**
+
+### 编写 UI 组件架构
+
+```js
+<div>
+    <h2>我是 Person 组件,上方组件求和为:{this.props.countAll}</h2>
+    <input ref={c => this.nameNode = c} type="text" placeholder="输入名字" />
+    <input ref={c => this.ageNode = c} type="text" placeholder="输入年龄" />
+    <button onClick={this.addPerson}>添加</button>
+    <ul>
+        {
+            this.props.persons.map((p) => {
+                return <li key={p.id}> {p.name}--{p.age}</li>
+            })
+        }
+    </ul>
+</div>
+```
+
+我们可以看到这里采用了 `ref` 来获取到当前事件触发的节点，并通过 `this.addPerson` 的方式给按钮绑定了一个点击事件
+
+### 编写点击事件回调
+
+```js
+addPerson = () => {
+    const name = this.nameNode.value
+    const age = this.ageNode.value
+    const personObj = { id: nanoid(), name, age }
+    this.props.add(personObj)
+    this.nameNode.value = ''
+    this.ageNode.value = ''
+}
+```
+
+在这里我们需要处理输入框中的数据，并且将这些数据用于创建一个 `action` 对象，传递给 `store` 进行状态的更新
+
+在这里我们需要回顾的是，这里我们使用了一个 `nanoid` 库，这个库我们之前也有使用过
+
+**下载，引入，暴露**
+
+```js
+import { nanoid } from 'nanoid'
+```
+
+暴露的 `nanoid` 是一个函数，我们每一次调用时，都会返回一个不重复的数，用于确保 `id` 的唯一性，同时在后面的 `map` 遍历的过程中，我们将 `id` 作为了 `key` 值，这样也确保了 `key` 的唯一性，关于 `key` 的作用，可以看看 `diffing` 算法的文章
+
+### 状态管理
+
+在这里我们需要非常熟练的采用 `this.props.add` 的方式来更新状态
+
+那么它是如何实现状态更新的呢？我们来看看
+
+在我们调用 `connect` 函数时，我们第一次调用时传入的第二个参数，就是用于传递方法的，我们传递了一个 `add` 方法
+
+```js
+export default connect(
+    state => ({ persons: state.person, countAll: state.count }),//映射状态
+    { add: createAddPersonAction }
+)(Person);
+```
+
+它的原词是：**mapDispatchToProps**
+
+我的理解是，传入的东西会被映射映射成 `props` 对象下的方法，这也是我们能够在 `props` 下访问到 `add` 方法的原因
+
+>对于这一块 `connect` ，我们必须要能够形成自己的理解，这里非常的重要，它实现了数据的交互，不至于一个组件，而是全部组件
+
+### 我是如何理解的呢？
+
+>想象一个 store 仓库，在我们这个案例当中，Count 组件需要存放 count 值在 store 中，Person 组件需要存放新增用户对象在 store 中，我们要把这两个数据存放在一个对象当中。当某个组件需要使用 store 中的值时，可以通过 connect 中的两个参数来获取，例如这里我们需要使用到 Count 组件的值，可以通过 `.count` 来从 store 中取值。
+
+也就是说，所有的值都存放在 store 当中，通过点运算符来获取，所有的操作 store 的方法都需要通过 action 来实现。**当前组件需要使用的数据都需要在 connect 中暴露**
+
+## 二、编写 reducer
+
+首先，我们需要明确 reducer 的作用，它是用来干什么的？
+
+**根据操作类型来指定状态的更新**
+
+也就是说当我们点击了**添加按钮**后，会将输入框中的数据整合成一个对象，作为当前 action 对象的 data 传递给 reducer
+
+我们可以看看我们编写的 action 文件，和我们想的一样
+
+```js
+import { ADD_PERSON } from "../constant";
+// 创建一个人的action 对象
+export const createAddPersonAction = (personObj) => ({
+  type: ADD_PERSON,
+  data: personObj,
+});
+```
+
+当 reducer 接收到 action 对象时，会对 type 进行判断
+
+```js
+export default function personReducer(preState = initState, action) {
+  const { type, data } = action;
+  switch (type) {
+    case ADD_PERSON:
+      return [data,...preState]
+    default:
+      return preState
+  }
+}
+```
+
+一般都采用 `switch` 来编写
+
+**这里有个值得注意的地方是**，这个 `personReducer` 函数是一个纯函数，什么是纯函数呢？这个是高阶函数部分的知识了，**纯函数是一个不改变参数的函数，也就是说，传入的参数是不能被改变的**。
+
+为什么要提这个呢？在我们 return 时，有时候会想通过**数组的 API** 来在数组前面塞一个值，不也可以吗？
+
+但是我们要采用 `unshirt` 方法，这个方法是会改变原数组的，也就是我们传入的参数会被改变，因此这样的方法是不可行的！
+
+## 三、打通数据共享
+
+写到这里，或许已经写完了，但是有些细节还是需要注意一下
+
+采用 Redux 来进行组件的数据交互真的挺方便。
+
+我们可以在 Count 组件中引入 Person 组件存在 store 中的状态。
+
+```js
+export default connect(state => ({ count: state.count, personNum: state.person.length }),
+    {
+       ...
+    }
+)(Count)
+```
+
+在这里我们将 store 中的 person 数组的长度暴露出来这样 Count 组件就可以直接通过 props 来使用了
+
+同样的我们也可以在 Person 组件中使用 Count 组件的值
+
+从而实现了我们的这个 Demo
+
+## 四、最终优化
+
+1. 利用对象的简写方法，将键名和键值同名，从而只写一个名即可
+
+2. 合并 reducer ，我们可以将多个 reducer文件 写在一个 index 文件当中，需要采用 combineReducers 来合并
+
+# 八、React 扩展
+
+## 1. setState
+
+### setState更新状态的2种写法
+
+```
+	(1). setState(stateChange, [callback])------对象式的setState
+            1.stateChange为状态改变对象(该对象可以体现出状态的更改)
+            2.callback是可选的回调函数, 它在状态更新完毕、界面也更新后(render调用后)才被调用
+					
+	(2). setState(updater, [callback])------函数式的setState
+            1.updater为返回stateChange对象的函数。
+            2.updater可以接收到state和props。
+            4.callback是可选的回调函数, 它在状态更新、界面也更新后(render调用后)才被调用。
+总结:
+		1.对象式的setState是函数式的setState的简写方式(语法糖)
+		2.使用原则：
+				(1).如果新状态不依赖于原状态 ===> 使用对象方式
+				(2).如果新状态依赖于原状态 ===> 使用函数方式
+				(3).如果需要在setState()执行后获取最新的状态数据, 
+					要在第二个callback函数中读取
+```
+
+
+
+------
+
+
+
+## 2. lazyLoad
+
+### 路由组件的lazyLoad
+
+```js
+	//1.通过React的lazy函数配合import()函数动态加载路由组件 ===> 路由组件代码会被分开打包
+	const Login = lazy(()=>import('@/pages/Login'))
+	
+	//2.通过<Suspense>指定在加载得到路由打包文件前显示一个自定义loading界面
+	<Suspense fallback={<h1>loading.....</h1>}>
+        <Switch>
+            <Route path="/xxx" component={Xxxx}/>
+            <Redirect to="/login"/>
+        </Switch>
+    </Suspense>
+```
+
+
+
+------
+
+
+
+## 3. Hooks
+
+#### 1. React Hook/Hooks是什么?
+
+```
+(1). Hook是React 16.8.0版本增加的新特性/新语法
+(2). 可以让你在函数组件中使用 state 以及其他的 React 特性
+```
+
+#### 2. 三个常用的Hook
+
+```
+(1). State Hook: React.useState()
+(2). Effect Hook: React.useEffect()
+(3). Ref Hook: React.useRef()
+```
+
+#### 3. State Hook
+
+```
+(1). State Hook让函数组件也可以有state状态, 并进行状态数据的读写操作
+(2). 语法: const [xxx, setXxx] = React.useState(initValue)  
+(3). useState()说明:
+        参数: 第一次初始化指定的值在内部作缓存
+        返回值: 包含2个元素的数组, 第1个为内部当前状态值, 第2个为更新状态值的函数
+(4). setXxx()2种写法:
+        setXxx(newValue): 参数为非函数值, 直接指定新的状态值, 内部用其覆盖原来的状态值
+        setXxx(value => newValue): 参数为函数, 接收原本的状态值, 返回新的状态值, 内部用其覆盖原来的状态值
+```
+
+#### 4. Effect Hook
+
+```
+(1). Effect Hook 可以让你在函数组件中执行副作用操作(用于模拟类组件中的生命周期钩子)
+(2). React中的副作用操作:
+        发ajax请求数据获取
+        设置订阅 / 启动定时器
+        手动更改真实DOM
+(3). 语法和说明: 
+        useEffect(() => { 
+          // 在此可以执行任何带副作用操作
+          return () => { // 在组件卸载前执行
+            // 在此做一些收尾工作, 比如清除定时器/取消订阅等
+          }
+        }, [stateValue]) // 如果指定的是[], 回调函数只会在第一次render()后执行
+    
+(4). 可以把 useEffect Hook 看做如下三个函数的组合
+        componentDidMount()
+        componentDidUpdate()
+    	componentWillUnmount() 
+```
+
+#### 5. Ref Hook
+
+```
+(1). Ref Hook可以在函数组件中存储/查找组件内的标签或任意其它数据
+(2). 语法: const refContainer = useRef()
+(3). 作用:保存标签对象,功能与React.createRef()一样
+```
+
+
+
+------
+
+
+
+## 4. Fragment
+
+### 使用
+
+	<Fragment><Fragment>
+	<></>
+
+### 作用
+
+> 可以不用必须有一个真实的DOM根标签了
+
+
+
+<hr/>
+
+## 5. Context
+
+### 理解
+
+> 一种组件间通信方式, 常用于【祖组件】与【后代组件】间通信
+
+### 使用
+
+```js
+1) 创建Context容器对象：
+	const XxxContext = React.createContext()  
+	
+2) 渲染子组时，外面包裹xxxContext.Provider, 通过value属性给后代组件传递数据：
+	<xxxContext.Provider value={数据}>
+		子组件
+    </xxxContext.Provider>
+    
+3) 后代组件读取数据：
+
+	//第一种方式:仅适用于类组件 
+	  static contextType = xxxContext  // 声明接收context
+	  this.context // 读取context中的value数据
+	  
+	//第二种方式: 函数组件与类组件都可以
+	  <xxxContext.Consumer>
+	    {
+	      value => ( // value就是context中的value数据
+	        要显示的内容
+	      )
+	    }
+	  </xxxContext.Consumer>
+```
+
+### 注意
+
+	在应用开发中一般不用context, 一般都用它的封装react插件
+
+
+
+<hr/>
+
+
+## 6. 组件优化
+
+### Component的2个问题 
+
+> 1. 只要执行setState(),即使不改变状态数据, 组件也会重新render() ==> 效率低
+>
+> 2. 只当前组件重新render(), 就会自动重新render子组件，纵使子组件没有用到父组件的任何数据 ==> 效率低
+
+### 效率高的做法
+
+>  只有当组件的state或props数据发生改变时才重新render()
+
+### 原因
+
+>  Component中的shouldComponentUpdate()总是返回true
+
+### 解决
+
+	办法1: 
+		重写shouldComponentUpdate()方法
+		比较新旧state或props数据, 如果有变化才返回true, 如果没有返回false
+	办法2:  
+		使用PureComponent
+		PureComponent重写了shouldComponentUpdate(), 只有state或props数据有变化才返回true
+		注意: 
+			只是进行state和props数据的浅比较, 如果只是数据对象内部数据变了, 返回false  
+			不要直接修改state数据, 而是要产生新数据
+	项目中一般使用PureComponent来优化
+
+
+
+<hr/>
+
+
+## 7. render props
+
+### 如何向组件内部动态传入带内容的结构(标签)?
+
+	Vue中: 
+		使用slot技术, 也就是通过组件标签体传入结构  <A><B/></A>
+	React中:
+		使用children props: 通过组件标签体传入结构
+		使用render props: 通过组件标签属性传入结构,而且可以携带数据，一般用render函数属性
+
+### children props
+
+	<A>
+	  <B>xxxx</B>
+	</A>
+	{this.props.children}
+	问题: 如果B组件需要A组件内的数据, ==> 做不到 
+
+### render props
+
+	<A render={(data) => <C data={data}></C>}></A>
+	A组件: {this.props.render(内部state数据)}
+	C组件: 读取A组件传入的数据显示 {this.props.data} 
+
+
+
+<hr/>
+
+## 8. 错误边界
+
+#### 理解：
+
+错误边界(Error boundary)：用来捕获后代组件错误，渲染出备用页面
+
+#### 特点：
+
+只能捕获后代组件生命周期产生的错误，不能捕获自己组件产生的错误和其他组件在合成事件、定时器中产生的错误
+
+##### 使用方式：
+
+getDerivedStateFromError配合componentDidCatch
+
+```js
+// 生命周期函数，一旦后台组件报错，就会触发
+static getDerivedStateFromError(error) {
+    console.log(error);
+    // 在render之前触发
+    // 返回新的state
+    return {
+        hasError: true,
+    };
+}
+
+componentDidCatch(error, info) {
+    // 统计页面的错误。发送请求发送到后台去
+    console.log(error, info);
+}
+```
+## 9. 组件通信方式总结
+
+#### 组件间的关系：
+
+- 父子组件
+- 兄弟组件（非嵌套组件）
+- 祖孙组件（跨级组件）
+
+#### 几种通信方式：
+
+		1.props：
+			(1).children props
+			(2).render props
+		2.消息订阅-发布：
+			pubs-sub、event等等
+		3.集中式管理：
+			redux、dva等等
+		4.conText:
+			生产者-消费者模式
+
+#### 比较好的搭配方式：
+		父子组件：props
+		兄弟组件：消息订阅-发布、集中式管理
+		祖孙组件(跨级组件)：消息订阅-发布、集中式管理、conText(开发用的少，封装插件用的多)
+
+
+# 九、React核心 -- React-Hooks
+
+## 一、 hooks 存在的意义
+
+1. hooks 之间的状态是独立的，有自己独立的上下文，不会出现混淆状态的情况
+
+2. 让函数有了状态管理
+
+3. 解决了 组件树不直观、类组件难维护、逻辑不易复用的问题
+
+4. 避免函数重复执行的副作用
+
+## 二、应用场景
+
+1. 利用 hooks 取代生命周期函数
+2. 让组件有了状态
+3. 组件辅助函数
+4. 处理发送请求
+5. 存取数据
+6. 做好性能优化
+
+## 三、hooks API
+
+从 `react` 中引入
+
+### 1. useState
+
+给函数组件添加状态
+
+* 初始化以及更新组件状态
+
+```js
+const [count, setCount] = React.useState(0)
+```
+
+接收一个参数作为初始值，返回一个数组：第一个是状态变量，第二个是修改变量的函数
+
+### 2. useEffect
+
+副作用 hooks
+
+* 给没有生命周期的组件，添加结束渲染的信号
+
+注意：
+
+* render 之后执行的 hooks
+
+第一个参数接收一个函数，在组件更新的时候执行
+
+第二个参数接收一个数组，用来表示需要追踪的变量，依赖列表，只有依赖更新的时候才会更新内容
+
+第一个参数的返回值，返回一个函数，在 `useEffect` 执行之前，都会先执行里面返回的函数
+
+一般用于添加销毁事件，这样就能保证只添加一个
+
+```js
+React.useEffect(() => {
+    console.log('被调用了');
+    return () => {
+        console.log('我要被卸载了');
+    }
+}, [count])
+```
+
+### 3. useLayoutEffect
+
+和 `useEffect` 很类似
+
+它的作用是：在 DOM 更新完成之后执行某个操作
+
+注意：
+* 有 DOM 操作的副作用 hooks
+* 在 DOM 更新之后执行
+
+>执行时机在 `useEffect` 之前，其他都和 `useEffect` 都相同
+
+`useEffect` 执行时机在 **render 之后**
+
+`useLayoutEffect` 执行时机在 **DOM 更新之后**
+
+### 4. useMemo
+
+作用：让组件中的函数跟随状态更新
+
+注意：优化函数组件中的功能函数
+
+**为了避免由于其他状态更新导致的当前函数的被迫执行**
+
+第一个参数接收一个函数，第二个参数为数组的依赖列表，返回一个值
+
+```js
+const getDoubleNum = useMemo(() => {
+    console.log('ddd')
+    return 2 * num
+}, [num])
+```
+
+### 5. useCallback
+
+作用：跟随状态更新执行
+
+注意：
+* 只有依赖项改变时才执行
+* `useMemo( () => fn, deps)` 相当于 `useCallback(fn, deps)`
+
+不同点：
+1. `useCallback` **返回的是一个函数，不再是值**
+2. `useCallback` `缓存的是一个函数，useMemo` 缓存的是一个值，**如果依赖不更新，返回的永远是缓存的那个函数**
+3. 给子组件中传递 `props` 的时候，如果当前组件不更新，不会触发子组件的重新渲染
+
+### 6. useRef
+
+作用：长久保存数据
+
+注意事项：
+* 返回一个子元素索引，这个索引在整个生命周期中保持不变
+* 对象发生改变时，不通知，属性变更不重新渲染
+
+1. 保存一个值，在整个生命周期中维持不变
+2. 重新赋值 `ref.current` 不会触发重新渲染
+3. 相当于**创建一个额外的容器来存储数据**，我们可以在外部拿到这个值
+
+当我们通过正常的方式去获取计时器的 `id` 是无法获取的，需要通过 `ref`
+
+```js
+useEffect(() => {
+    ref.current = setInterval(() => {
+        setNum(num => num + 1)
+    }, 400)
+}, [])
+useEffect(() => {
+    if (num > 10) {
+        console.log('到十了');
+        clearInterval(ref.current)
+    }
+}, [num])
+```
+
+### 7. useContext
+
+作用：带着子组件渲染
+
+注意：
+* 上层数据发生改变，肯定会触发重新渲染
+
+1. 我们需要引入 `useContext` 和 `createContext` 两个内容
+2. 通过 `createContext` 创建一个 `Context` 句柄
+3. 通过 `Provider` 确定数据共享范围
+4. 通过 `value` 来分发数据
+5. 在子组件中，通过 `useContext` 来获取数据
+
+```js
+import React, { useContext, createContext } from 'react'
+const Context = createContext(null)
+export default function Hook() {
+    const [num, setNum] = React.useState(1)
+
+    return (
+        <h1>
+            这是一个函数组件 - {num}
+        // 确定范围
+            <Context.Provider value={num}>
+                <Item1 num={num} />
+                <Item2 num={num} />
+            </Context.Provider>
+        </h1>
+    )
+}
+function Item1() {
+    const num = useContext(Context)
+    return <div>子组件1  {num}</div>
+}
+function Item2() {
+    const num = useContext(Context)
+    return <div>子组件2 {num}</div>
+}
+```
+
+### 8. useReducer
+
+作用：去其他地方借资源
+
+注意：函数组件的 Redux 的操作
+
+1. 创建数据仓库 `store` 和管理者 `reducer`
+2. 通过 `useReducer(store,dispatch)` 来获取 `state` 和 `dispatch`
+
+```js
+const store = {
+    num: 10
+}
+const reducer = (state, action) => {
+    switch (action.type) {
+        case "":
+            return
+        default:
+            return
+    }
+}
+    const [state, dispatch] = useReducer(reducer, store)
+```
+
+通过 `dispatch` 去派发 `action`
+
+### 9. 自定义 hooks
+
+放在 `utils` 文件夹中，以 `use` 开头命名
+
+例如：模拟数据请求的 Hooks
+```js
+import React, { useState, useEffect } from "react";
+function useLoadData() {
+  const [num, setNum] = useState(1);
+  useEffect(() => {
+    setTimeout(() => {
+      setNum(2);
+    }, 1000);
+  }, []);
+  return [num, setNum];
+}
+export default useLoadData;
+```
+
+减少代码耦合
+
+我们希望 reducer 能让每个组件来使用，我们自己写一个 hooks
+
+自定义一个自己的 LocalReducer
+
+```js
+import React, { useReducer } from "react";
+const store = { num: 1210 };
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "num":
+      return { ...state, num: action.num };
+    default:
+      return { ...state };
+  }
+};
+function useLocalReducer() {
+  const [state, dispatch] = useReducer(reducer, store);
+  return [state, dispatch];
+}
+export default useLocalReducer;
+```
+
+1. 引入 react 和自己需要的 hook
+2. 创建自己的hook函数
+3. 返回一个数组，数组中第一个内容是数据，第二个是修改数据的函数
+4. 暴露自定义 hook 函数出去
+5. 引入自己的业务组件
